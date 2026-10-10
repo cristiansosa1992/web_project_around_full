@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 import router from "./routes/index.js";
 import { createUser, login } from "./controllers/users.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -69,4 +69,5 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 app.listen(PORT);
+
 
