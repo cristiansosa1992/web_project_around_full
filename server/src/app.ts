@@ -10,7 +10,7 @@ import { errorHandler } from "./middleware/error-handler.js";
 dotenv.config({ path: new URL("../.env", import.meta.url) });
 
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT) || 3001;
 const DATABASE_URL =
   process.env.DATABASE_URL || "mongodb://127.0.0.1:27017/aroundb";
@@ -46,10 +46,10 @@ const signinLimiter = rateLimit({
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.status(200).json({
     success: true,
-    data: { status: 'ok' },
+    data: { status: "ok" },
     error: null,
   });
 });
@@ -69,3 +69,4 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 app.listen(PORT);
+
