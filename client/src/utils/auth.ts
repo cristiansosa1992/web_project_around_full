@@ -1,13 +1,10 @@
-import type { AuthUser } from '../types/types';
+import type { UserData } from '../types/types';
 
-const BASE_URL = 'https://se-register-api.en.tripleten-services.com/v1';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 type AuthResponse = {
   token: string;
-};
-
-type AuthUserResponse = {
-  data: AuthUser;
+  user: UserData;
 };
 
 async function checkResponse<T>(res: Response): Promise<T> {
@@ -19,8 +16,8 @@ async function checkResponse<T>(res: Response): Promise<T> {
   return text ? JSON.parse(text) : ({} as T);
 }
 
-export async function signup(email: string, password: string): Promise<AuthUser> {
-  const res = await fetch(`${BASE_URL}/signup`, {
+export async function signup(email: string, password: string): Promise<UserData> {
+  const res = await fetch(`${API_URL}/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,16 +25,14 @@ export async function signup(email: string, password: string): Promise<AuthUser>
     body: JSON.stringify({ email, password }),
   });
 
-  const response = await checkResponse<AuthUserResponse>(res);
-
-  return response.data;
+  return checkResponse<UserData>(res);
 }
 
 export async function signin(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  const res = await fetch(`${BASE_URL}/signin`, {
+  const res = await fetch(`${API_URL}/signin`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -48,14 +43,14 @@ export async function signin(
   return checkResponse<AuthResponse>(res);
 }
 
-export async function checkToken(token: string): Promise<AuthUser> {
-  const res = await fetch(`${BASE_URL}/users/me`, {
+export async function checkToken(token: string): Promise<UserData> {
+  const res = await fetch(`${API_URL}/users/me`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
-  const response = await checkResponse<AuthUserResponse>(res);
-
-  return response.data;
+  return checkResponse<UserData>(res);
 }
+
+

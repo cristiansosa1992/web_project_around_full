@@ -10,11 +10,6 @@ export interface UserData {
   name: string;
   about: string;
   avatar: string;
-  email?: string;
-}
-
-export interface AuthUser {
-  _id?: string;
   email: string;
 }
 

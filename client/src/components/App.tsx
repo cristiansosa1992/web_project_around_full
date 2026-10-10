@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
-import CurrentUserContext from '../contexts/CurrentUserContext';
-import api from '../utils/api';
-import * as auth from '../utils/auth';
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import CurrentUserContext from "../contexts/CurrentUserContext";
+import api from "../utils/api";
+import * as auth from "../utils/auth";
 import type {
   CardData,
   EditAvatarData,
@@ -10,14 +10,14 @@ import type {
   NewCardData,
   PopupConfig,
   UserData,
-} from '../types/types';
-import Header from './Header/Header';
-import Main from './Main/Main';
-import Footer from './Footer/Footer';
-import Login from './Login/Login';
-import Register from './Register/Register';
-import ProtectedRoute from './ProtectedRoute/ProtectedRoute';
-import InfoTooltip from './InfoTooltip/InfoTooltip';
+} from "../types/types";
+import Header from "./Header/Header";
+import Main from "./Main/Main";
+import Footer from "./Footer/Footer";
+import Login from "./Login/Login";
+import Register from "./Register/Register";
+import ProtectedRoute from "./ProtectedRoute/ProtectedRoute";
+import InfoTooltip from "./InfoTooltip/InfoTooltip";
 
 type InfoTooltipState = {
   isOpen: boolean;
@@ -29,34 +29,37 @@ function App() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(
-    () => !localStorage.getItem('jwt')
+    () => !localStorage.getItem("jwt"),
   );
-  const [email, setEmail] = useState('');
+
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [cards, setCards] = useState<CardData[]>([]);
   const [popup, setPopup] = useState<PopupConfig | null>(null);
   const [infoTooltip, setInfoTooltip] = useState<InfoTooltipState>({
     isOpen: false,
     isSuccess: false,
-    message: '',
+    message: "",
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('jwt');
+    const token = localStorage.getItem("jwt");
 
     if (!token) {
+      setIsAuthChecked(true);
       return;
     }
 
-    auth
-      .checkToken(token)
+    api
+      .getUserInfo()
       .then((user) => {
-        setEmail(user.email || '');
+        setCurrentUser(user);
         setIsLoggedIn(true);
       })
       .catch((error) => {
         console.error(error);
-        localStorage.removeItem('jwt');
+        localStorage.removeItem("jwt");
+        setCurrentUser(null);
+        setIsLoggedIn(false);
       })
       .finally(() => {
         setIsAuthChecked(true);
@@ -68,65 +71,70 @@ function App() {
       return;
     }
 
-    (async () => {
-      try {
-        const [userData, initialCards] = await Promise.all([
-          api.getUserInfo(),
-          api.getInitialCards(),
-        ]);
-
-        setCurrentUser(userData);
+    api
+      .getInitialCards()
+      .then((initialCards) => {
         setCards(initialCards);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error(error);
-      }
-    })();
+      });
   }, [isLoggedIn]);
 
-  async function handleRegister(emailValue: string, password: string): Promise<void> {
+  async function handleRegister(
+    emailValue: string,
+    password: string,
+  ): Promise<void> {
     try {
       await auth.signup(emailValue, password);
       setInfoTooltip({
         isOpen: true,
         isSuccess: true,
-        message: '¡Correcto! Ya estás registrado.',
+        message: "¡Correcto! Ya estás registrado.",
       });
-      navigate('/signin');
+      navigate("/signin");
     } catch (error) {
       console.error(error);
       setInfoTooltip({
         isOpen: true,
         isSuccess: false,
-        message: 'Uy, algo salió mal. Por favor, inténtalo de nuevo.',
+        message: "Uy, algo salió mal. Por favor, inténtalo de nuevo.",
       });
     }
   }
 
-  async function handleLogin(emailValue: string, password: string): Promise<void> {
+  async function handleLogin(
+    emailValue: string,
+    password: string,
+  ): Promise<void> {
     try {
       const { token } = await auth.signin(emailValue, password);
 
-      localStorage.setItem('jwt', token);
-      setEmail(emailValue);
+      localStorage.setItem("jwt", token);
+
+      const user = await api.getUserInfo();
+
+      setCurrentUser(user);
       setIsLoggedIn(true);
-      navigate('/');
+      navigate("/");
     } catch (error) {
       console.error(error);
+      localStorage.removeItem("jwt");
+
       setInfoTooltip({
         isOpen: true,
         isSuccess: false,
-        message: 'Uy, algo salió mal. Por favor, inténtalo de nuevo.',
+        message: "Uy, algo salió mal. Por favor, inténtalo de nuevo.",
       });
     }
   }
 
   function handleSignOut(): void {
-    localStorage.removeItem('jwt');
+    localStorage.removeItem("jwt");
     setIsLoggedIn(false);
-    setEmail('');
     setCurrentUser(null);
     setCards([]);
-    navigate('/signin');
+    navigate("/signin");
   }
 
   function handleOpenPopup(popupConfig: PopupConfig): void {
@@ -141,7 +149,7 @@ function App() {
     setInfoTooltip({
       isOpen: false,
       isSuccess: false,
-      message: '',
+      message: "",
     });
   }
 
@@ -182,13 +190,15 @@ function App() {
     const isLiked = card.isLiked;
 
     try {
-      const apiCall = isLiked ? api.removeLike(card._id) : api.addLike(card._id);
+      const apiCall = isLiked
+        ? api.removeLike(card._id)
+        : api.addLike(card._id);
       const newCard = await apiCall;
 
       setCards((state) =>
         state.map((currentCard) =>
-          currentCard._id === card._id ? newCard : currentCard
-        )
+          currentCard._id === card._id ? newCard : currentCard,
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -200,7 +210,7 @@ function App() {
       await api.deleteCard(card._id);
 
       setCards((state) =>
-        state.filter((currentCard) => currentCard._id !== card._id)
+        state.filter((currentCard) => currentCard._id !== card._id),
       );
     } catch (error) {
       console.error(error);
@@ -216,13 +226,17 @@ function App() {
         handleUpdateUser,
       }}
     >
-      <div className='page__content'>
-        <Header email={email} isLoggedIn={isLoggedIn} onSignOut={handleSignOut} />
+      <div className="page__content">
+        <Header
+          email={currentUser?.email ?? ""}
+          isLoggedIn={isLoggedIn}
+          onSignOut={handleSignOut}
+        />
 
         {isAuthChecked && (
           <Routes>
             <Route
-              path='/'
+              path="/"
               element={
                 <ProtectedRoute isLoggedIn={isLoggedIn}>
                   <Main
@@ -238,30 +252,30 @@ function App() {
             />
 
             <Route
-              path='/signin'
+              path="/signin"
               element={
                 !isLoggedIn ? (
                   <Login onLogin={handleLogin} />
                 ) : (
-                  <Navigate to='/' replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
 
             <Route
-              path='/signup'
+              path="/signup"
               element={
                 !isLoggedIn ? (
                   <Register onRegister={handleRegister} />
                 ) : (
-                  <Navigate to='/' replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
 
             <Route
-              path='*'
-              element={<Navigate to={isLoggedIn ? '/' : '/signin'} replace />}
+              path="*"
+              element={<Navigate to={isLoggedIn ? "/" : "/signin"} replace />}
             />
           </Routes>
         )}

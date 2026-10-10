@@ -6,27 +6,38 @@ const avatarRegex =
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    default: "Jacques Cousteau",
     minlength: 2,
     maxlength: 30,
   },
 
   about: {
     type: String,
-    required: true,
+    default: "Explorador",
     minlength: 2,
     maxlength: 30,
   },
 
   avatar: {
     type: String,
-    required: true,
-    minlength: 2,
-    maxlength: 30,
+    default:
+      "https://practicum-content.s3.us-west-1.amazonaws.com/web-lat/avatar.jpg",
     validate: {
       validator: (value: string) => avatarRegex.test(value),
       message: "La URL del avatar no es válida",
     },
+  },
+
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+
+  password: {
+    type: String,
+    required: true,
+    select: false,
   },
 });
 

@@ -24,8 +24,15 @@ export const getCards = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const cards = await Card.find({});
-    const userId = req.user?._id;
+    if (!req.user) {
+      res.status(401).json({
+        message: "Usuario no autorizado",
+      });
+      return;
+    }
+
+    const userId = req.user._id;
+    const cards = await Card.find({ owner: userId }).sort({ createdAt: -1 });
 
     const cardsWithIsLiked = cards.map((card) => addIsLiked(card, userId));
 
@@ -68,8 +75,15 @@ export const deleteCard = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({
+        message: "Usuario no autorizado",
+      });
+      return;
+    }
+
     const { id } = req.params;
-    const card = await Card.findByIdAndDelete(id);
+    const card = await Card.findById(id);
 
     if (!card) {
       throw Object.assign(new Error("ID de tarjeta no encontrado"), {
@@ -77,7 +91,18 @@ export const deleteCard = async (
       });
     }
 
-    res.json(addIsLiked(card, req.user?._id));
+    if (String(card.owner) !== req.user._id) {
+      throw Object.assign(
+        new Error("No tienes permiso para eliminar esta tarjeta"),
+        {
+          statusCode: 403,
+        },
+      );
+    }
+
+    await Card.findByIdAndDelete(id);
+
+    res.json(addIsLiked(card, req.user._id));
   } catch (err) {
     next(err);
   }
@@ -89,11 +114,15 @@ export const likeCard = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const card = await Card.findByIdAndUpdate(
-      req.params.id,
-      { $addToSet: { likes: req.user?._id } },
-      { new: true },
-    );
+    if (!req.user) {
+      res.status(401).json({
+        message: "Usuario no autorizado",
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const card = await Card.findById(id);
 
     if (!card) {
       throw Object.assign(new Error("ID de tarjeta no encontrado"), {
@@ -101,7 +130,28 @@ export const likeCard = async (
       });
     }
 
-    res.json(addIsLiked(card, req.user?._id));
+    if (String(card.owner) !== req.user._id) {
+      throw Object.assign(
+        new Error("No tienes permiso para modificar esta tarjeta"),
+        {
+          statusCode: 403,
+        },
+      );
+    }
+
+    const updatedCard = await Card.findByIdAndUpdate(
+      id,
+      { $addToSet: { likes: req.user._id } },
+      { new: true },
+    );
+
+    if (!updatedCard) {
+      throw Object.assign(new Error("ID de tarjeta no encontrado"), {
+        statusCode: 404,
+      });
+    }
+
+    res.json(addIsLiked(updatedCard, req.user._id));
   } catch (err) {
     next(err);
   }
@@ -113,11 +163,15 @@ export const dislikeCard = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const card = await Card.findByIdAndUpdate(
-      req.params.id,
-      { $pull: { likes: req.user?._id } },
-      { new: true },
-    );
+    if (!req.user) {
+      res.status(401).json({
+        message: "Usuario no autorizado",
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const card = await Card.findById(id);
 
     if (!card) {
       throw Object.assign(new Error("ID de tarjeta no encontrado"), {
@@ -125,7 +179,28 @@ export const dislikeCard = async (
       });
     }
 
-    res.json(addIsLiked(card, req.user?._id));
+    if (String(card.owner) !== req.user._id) {
+      throw Object.assign(
+        new Error("No tienes permiso para modificar esta tarjeta"),
+        {
+          statusCode: 403,
+        },
+      );
+    }
+
+    const updatedCard = await Card.findByIdAndUpdate(
+      id,
+      { $pull: { likes: req.user._id } },
+      { new: true },
+    );
+
+    if (!updatedCard) {
+      throw Object.assign(new Error("ID de tarjeta no encontrado"), {
+        statusCode: 404,
+      });
+    }
+
+    res.json(addIsLiked(updatedCard, req.user._id));
   } catch (err) {
     next(err);
   }

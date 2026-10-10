@@ -1,7 +1,7 @@
+
 import { Router } from "express";
 
 import {
-  createUser,
   getCurrentUser,
   getUserById,
   getUsers,
@@ -16,6 +16,5 @@ router.get("/me", getCurrentUser);
 router.patch("/me", updateCurrentUser);
 router.patch("/me/avatar", updateCurrentUserAvatar);
 router.get("/:id", getUserById);
-router.post("/", createUser);
 
 export default router;
