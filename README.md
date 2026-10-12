@@ -33,9 +33,8 @@ En este sprint se implementa la autenticación propia del proyecto, se refuerzan
 - Crear una segunda cuenta para comprobar que no puede ver ni modificar tarjetas de otro usuario.
 - Agregar al README las URLs finales del frontend y backend desplegados.
 
-### URLs de despliegue
 
-Backend:
+## Proyecto desplegado
 
-```txt
-Pendiente
+- Frontend: https://web-project-around-full-z2ul.vercel.app/
+- Backend: https://web-project-around-full-xi.vercel.app/
